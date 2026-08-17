@@ -1,0 +1,168 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.balafamily.st10474385.prog6112.assignment1;
+
+/**
+ *
+ * @author KhanyisaB
+ */
+class clsPatient {
+
+    private String patientId;
+    private String firstName;
+    private String lastName;
+    private int age;
+    private String gender;
+    private String medicalCondition;
+    private String patientCategory;
+
+    // Bed allocated to this patient.
+    // null means no bed is currently allocated.
+    private String bedNumber;
+
+    // ==========================================
+    // CONSTRUCTOR
+    // ==========================================
+
+    public clsPatient(
+            String patientId,
+            String firstName,
+            String lastName,
+            int age,
+            String gender,
+            String medicalCondition,
+            String patientCategory) {
+
+        this.patientId = patientId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.age = age;
+        this.gender = gender;
+        this.medicalCondition = medicalCondition;
+        this.patientCategory = patientCategory;
+
+        this.bedNumber = null;
+    }
+
+    // ==========================================
+    // GETTERS
+    // ==========================================
+
+    public String getPatientId() {
+        return patientId;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public String getMedicalCondition() {
+        return medicalCondition;
+    }
+
+    public String getPatientCategory() {
+        return patientCategory;
+    }
+
+    public String getBedNumber() {
+        return bedNumber;
+    }
+
+    // ==========================================
+    // SETTERS
+    // ==========================================
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setMedicalCondition(String medicalCondition) {
+        this.medicalCondition = medicalCondition;
+    }
+
+    public void setPatientCategory(String patientCategory) {
+        this.patientCategory = patientCategory;
+    }
+
+    public void setBedNumber(String bedNumber) {
+        this.bedNumber = bedNumber;
+    }
+
+    // ==========================================
+    // DISPLAY PATIENT INFORMATION
+    // ==========================================
+
+    public void displayPatient() {
+
+        System.out.println("-----------------------------------");
+
+        System.out.println(
+                "Patient ID: " + patientId
+        );
+
+        System.out.println(
+                "First Name: " + firstName
+        );
+
+        System.out.println(
+                "Last Name: " + lastName
+        );
+
+        System.out.println(
+                "Age: " + age
+        );
+
+        System.out.println(
+                "Gender: " + gender
+        );
+
+        System.out.println(
+                "Medical Condition: " + medicalCondition
+        );
+
+        System.out.println(
+                "Patient Category: " + patientCategory
+        );
+
+        if (bedNumber != null) {
+
+            System.out.println(
+                    "Allocated Bed: " + bedNumber
+            );
+
+        } else {
+
+            System.out.println(
+                    "Allocated Bed: None"
+            );
+        }
+
+        System.out.println("-----------------------------------");
+    }
+}

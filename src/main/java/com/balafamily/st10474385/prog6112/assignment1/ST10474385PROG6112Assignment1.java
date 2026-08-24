@@ -43,6 +43,7 @@ public class ST10474385PROG6112Assignment1 {
         int choice;
 
         do {
+
             System.out.println("\n=================================");
             System.out.println("PATIENT MANAGEMENT SYSTEM");
             System.out.println("=================================");
@@ -115,7 +116,9 @@ public class ST10474385PROG6112Assignment1 {
                     break;
 
                 default:
-                    System.out.println("Invalid choice. Please try again.");
+                    System.out.println(
+                            "Invalid choice. Please try again."
+                    );
             }
 
         } while (choice != 12);
@@ -136,7 +139,11 @@ public class ST10474385PROG6112Assignment1 {
 
         // Check if ID already exists
         if (findPatient(patientId) != null) {
-            System.out.println("A patient with this ID already exists.");
+
+            System.out.println(
+                    "A patient with this ID already exists."
+            );
+
             return;
         }
 
@@ -154,39 +161,85 @@ public class ST10474385PROG6112Assignment1 {
         System.out.print("Enter Medical Condition: ");
         String medicalCondition = scanner.nextLine();
 
-        String patientCategory = getPatientCategory();
+        PatientCategory patientCategory = getPatientCategory();
 
-        clsPatient patient = new clsPatient(
-                patientId,
-                firstName,
-                lastName,
-                age,
-                gender,
-                medicalCondition,
-                patientCategory
-        );
+        clsPatient patient;
+
+        // ==========================================
+        // CREATE INPATIENT
+        // ==========================================
+
+        if (patientCategory == PatientCategory.INPATIENT) {
+
+            System.out.print("Enter Ward Number: ");
+            String wardNumber = scanner.nextLine();
+
+            patient = new clsInpatient(
+                    patientId,
+                    firstName,
+                    lastName,
+                    age,
+                    gender,
+                    medicalCondition,
+                    wardNumber,
+                    null
+            );
+
+        }
+
+        // ==========================================
+        // CREATE OUTPATIENT / EMERGENCY
+        // ==========================================
+
+        else {
+
+            patient = new clsPatient(
+                    patientId,
+                    firstName,
+                    lastName,
+                    age,
+                    gender,
+                    medicalCondition,
+                    patientCategory
+            );
+        }
 
         patients.add(patient);
 
-        System.out.println("Patient registered successfully!");
+        System.out.println(
+                "Patient registered successfully!"
+        );
 
-        // Only Inpatients can be allocated beds
-        if (patientCategory.equalsIgnoreCase("Inpatient")) {
+        // Only Inpatients can have beds
+        if (patientCategory == PatientCategory.INPATIENT) {
 
-            System.out.println("\nThis patient is an Inpatient.");
+            System.out.println(
+                    "\nThis patient is an Inpatient."
+            );
 
             if (getAvailableBedCount() > 0) {
 
-                System.out.print("Would you like to allocate a bed now? (Y/N): ");
+                System.out.print(
+                        "Would you like to allocate a bed now? (Y/N): "
+                );
+
                 String answer = scanner.nextLine();
 
                 if (answer.equalsIgnoreCase("Y")) {
+
                     allocateBedToPatient(patient);
                 }
 
             } else {
-                System.out.println("WARNING: No beds are currently available.");
-                System.out.println("The patient has been registered but no bed was allocated.");
+
+                System.out.println(
+                        "WARNING: No beds are currently available."
+                );
+
+                System.out.println(
+                        "The patient has been registered "
+                        + "but no bed was allocated."
+                );
             }
         }
     }
@@ -205,17 +258,30 @@ public class ST10474385PROG6112Assignment1 {
         clsPatient patient = findPatient(patientId);
 
         if (patient != null) {
+
             System.out.println("\nPatient found:");
+
             patient.displayPatient();
 
-            if (patient.getBedNumber() != null) {
-                System.out.println("Allocated Bed: " + patient.getBedNumber());
+            if (getPatientBed(patient) != null) {
+
+                System.out.println(
+                        "Allocated Bed: "
+                        + getPatientBed(patient)
+                );
+
             } else {
-                System.out.println("Allocated Bed: None");
+
+                System.out.println(
+                        "Allocated Bed: None"
+                );
             }
 
         } else {
-            System.out.println("Patient not found.");
+
+            System.out.println(
+                    "Patient not found."
+            );
         }
     }
 
@@ -233,14 +299,24 @@ public class ST10474385PROG6112Assignment1 {
         clsPatient patient = findPatient(patientId);
 
         if (patient == null) {
-            System.out.println("Patient not found.");
+
+            System.out.println(
+                    "Patient not found."
+            );
+
             return;
         }
 
-        System.out.println("\nCurrent patient details:");
+        System.out.println(
+                "\nCurrent patient details:"
+        );
+
         patient.displayPatient();
 
-        String oldCategory = patient.getPatientCategory();
+        PatientCategory oldCategory =
+                patient.getPatientCategory();
+
+        String oldBed = getPatientBed(patient);
 
         System.out.println("\nEnter new details:");
 
@@ -258,60 +334,149 @@ public class ST10474385PROG6112Assignment1 {
         System.out.print("Enter Medical Condition: ");
         String medicalCondition = scanner.nextLine();
 
-        String newCategory = getPatientCategory();
-
-        patient.setFirstName(firstName);
-        patient.setLastName(lastName);
-        patient.setAge(age);
-        patient.setGender(gender);
-        patient.setMedicalCondition(medicalCondition);
-        patient.setPatientCategory(newCategory);
+        PatientCategory newCategory =
+                getPatientCategory();
 
         // ==========================================
-        // BED MANAGEMENT DURING UPDATE
+        // CATEGORY HAS NOT CHANGED
         // ==========================================
 
-        // If patient was previously an inpatient
-        // but is now another category, release their bed.
-        if (oldCategory.equalsIgnoreCase("Inpatient")
-                && !newCategory.equalsIgnoreCase("Inpatient")) {
+        if (oldCategory == newCategory) {
 
-            if (patient.getBedNumber() != null) {
+            patient.setFirstName(firstName);
+            patient.setLastName(lastName);
+            patient.setAge(age);
+            patient.setGender(gender);
+            patient.setMedicalCondition(medicalCondition);
+
+            // If the patient is already an inpatient,
+            // allow the ward number to be updated.
+            if (patient instanceof clsInpatient) {
+
+                clsInpatient inpatient =
+                        (clsInpatient) patient;
+
+                System.out.print(
+                        "Enter Ward Number: "
+                );
+
+                String wardNumber =
+                        scanner.nextLine();
+
+                inpatient.setWardNumber(
+                        wardNumber
+                );
+            }
+
+            System.out.println(
+                    "Patient details updated successfully!"
+            );
+
+            return;
+        }
+
+        // ==========================================
+        // INPATIENT -> OTHER CATEGORY
+        // ==========================================
+
+        if (oldCategory == PatientCategory.INPATIENT
+                && newCategory != PatientCategory.INPATIENT) {
+
+            // Release existing bed first
+            if (oldBed != null) {
 
                 releaseBedFromPatient(patient);
-
-                System.out.println("Patient category changed.");
-                System.out.println("Their previous bed has been released.");
             }
-        }
 
-        // If patient changes from another category
-        // to Inpatient, offer bed allocation.
-        if (!oldCategory.equalsIgnoreCase("Inpatient")
-                && newCategory.equalsIgnoreCase("Inpatient")) {
-
-            if (patient.getBedNumber() == null) {
-
-                if (getAvailableBedCount() > 0) {
-
-                    System.out.print(
-                            "Patient is now an Inpatient. "
-                            + "Would you like to allocate a bed? (Y/N): "
+            clsPatient newPatient =
+                    new clsPatient(
+                            patientId,
+                            firstName,
+                            lastName,
+                            age,
+                            gender,
+                            medicalCondition,
+                            newCategory
                     );
 
-                    String answer = scanner.nextLine();
+            int index = patients.indexOf(patient);
 
-                    if (answer.equalsIgnoreCase("Y")) {
-                        allocateBedToPatient(patient);
-                    }
+            patients.set(index, newPatient);
 
-                } else {
-                    System.out.println("No beds are currently available.");
-                }
-            }
+            System.out.println(
+                    "Patient category changed."
+            );
+
+            System.out.println(
+                    "Previous inpatient bed has been released."
+            );
+
+            System.out.println(
+                    "Patient details updated successfully!"
+            );
+
+            return;
         }
 
-        System.out.println("Patient details updated successfully!");
+        // ==========================================
+        // OTHER CATEGORY -> INPATIENT
+        // ==========================================
+
+        if (oldCategory != PatientCategory.INPATIENT
+                && newCategory == PatientCategory.INPATIENT) {
+
+            System.out.print(
+                    "Enter Ward Number: "
+            );
+
+            String wardNumber =
+                    scanner.nextLine();
+
+            clsInpatient newPatient =
+                    new clsInpatient(
+                            patientId,
+                            firstName,
+                            lastName,
+                            age,
+                            gender,
+                            medicalCondition,
+                            wardNumber,
+                            null
+                    );
+
+            int index = patients.indexOf(patient);
+
+            patients.set(index, newPatient);
+
+            System.out.println(
+                    "Patient category changed to Inpatient."
+            );
+
+            if (getAvailableBedCount() > 0) {
+
+                System.out.print(
+                        "Would you like to allocate a bed? (Y/N): "
+                );
+
+                String answer =
+                        scanner.nextLine();
+
+                if (answer.equalsIgnoreCase("Y")) {
+
+                    allocateBedToPatient(newPatient);
+                }
+
+            } else {
+
+                System.out.println(
+                        "No beds are currently available."
+                );
+            }
+
+            System.out.println(
+                    "Patient details updated successfully!"
+            );
+        }
     }
 
     // ==========================================
@@ -320,44 +485,66 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void deletePatient() {
 
-        System.out.println("\n--- Delete / Discharge Patient ---");
+        System.out.println(
+                "\n--- Delete / Discharge Patient ---"
+        );
 
         System.out.print("Enter Patient ID: ");
         String patientId = scanner.nextLine();
 
-        clsPatient patient = findPatient(patientId);
+        clsPatient patient =
+                findPatient(patientId);
 
         if (patient == null) {
-            System.out.println("Patient not found.");
+
+            System.out.println(
+                    "Patient not found."
+            );
+
             return;
         }
 
-        System.out.println("\nPatient to be deleted:");
+        System.out.println(
+                "\nPatient to be deleted:"
+        );
+
         patient.displayPatient();
 
-        if (patient.getBedNumber() != null) {
-            System.out.println("Allocated Bed: " + patient.getBedNumber());
+        if (getPatientBed(patient) != null) {
+
+            System.out.println(
+                    "Allocated Bed: "
+                    + getPatientBed(patient)
+            );
         }
 
         System.out.print(
-                "Are you sure you want to delete/discharge this patient? (Y/N): "
+                "Are you sure you want to "
+                + "delete/discharge this patient? (Y/N): "
         );
 
-        String confirmation = scanner.nextLine();
+        String confirmation =
+                scanner.nextLine();
 
         if (confirmation.equalsIgnoreCase("Y")) {
 
             // Release bed before deleting patient
-            if (patient.getBedNumber() != null) {
+            if (getPatientBed(patient) != null) {
+
                 releaseBedFromPatient(patient);
             }
 
             patients.remove(patient);
 
-            System.out.println("Patient discharged/deleted successfully!");
+            System.out.println(
+                    "Patient discharged/deleted successfully!"
+            );
 
         } else {
-            System.out.println("Delete operation cancelled.");
+
+            System.out.println(
+                    "Delete operation cancelled."
+            );
         }
     }
 
@@ -367,26 +554,45 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void displayAllPatients() {
 
-        System.out.println("\n--- All Registered Patients ---");
+        System.out.println(
+                "\n--- All Registered Patients ---"
+        );
 
         if (patients.isEmpty()) {
-            System.out.println("No patients are currently registered.");
+
+            System.out.println(
+                    "No patients are currently registered."
+            );
+
             return;
         }
 
-        System.out.println("Total Patients: " + patients.size());
+        System.out.println(
+                "Total Patients: "
+                + patients.size()
+        );
 
         for (clsPatient patient : patients) {
+
             patient.displayPatient();
 
-            if (patient.getBedNumber() != null) {
-                System.out.println("Allocated Bed: "
-                        + patient.getBedNumber());
+            if (getPatientBed(patient) != null) {
+
+                System.out.println(
+                        "Allocated Bed: "
+                        + getPatientBed(patient)
+                );
+
             } else {
-                System.out.println("Allocated Bed: None");
+
+                System.out.println(
+                        "Allocated Bed: None"
+                );
             }
 
-            System.out.println("-----------------------------------");
+            System.out.println(
+                    "-----------------------------------"
+            );
         }
     }
 
@@ -396,15 +602,26 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void allocateBed() {
 
-        System.out.println("\n--- Allocate Bed ---");
+        System.out.println(
+                "\n--- Allocate Bed ---"
+        );
 
-        System.out.print("Enter Patient ID: ");
-        String patientId = scanner.nextLine();
+        System.out.print(
+                "Enter Patient ID: "
+        );
 
-        clsPatient patient = findPatient(patientId);
+        String patientId =
+                scanner.nextLine();
+
+        clsPatient patient =
+                findPatient(patientId);
 
         if (patient == null) {
-            System.out.println("Patient not found.");
+
+            System.out.println(
+                    "Patient not found."
+            );
+
             return;
         }
 
@@ -415,24 +632,41 @@ public class ST10474385PROG6112Assignment1 {
     // ALLOCATE BED TO PATIENT
     // ==========================================
 
-    public static void allocateBedToPatient(clsPatient patient) {
+    public static void allocateBedToPatient(
+            clsPatient patient) {
 
         // Only Inpatients may have beds
-        if (!patient.getPatientCategory().equalsIgnoreCase("Inpatient")) {
+        if (patient.getPatientCategory()
+                != PatientCategory.INPATIENT) {
 
             System.out.println(
-                    "ERROR: Only Inpatients may be allocated a hospital bed."
+                    "ERROR: Only Inpatients may "
+                    + "be allocated a hospital bed."
             );
 
             return;
         }
 
+        // Make sure object is actually an Inpatient
+        if (!(patient instanceof clsInpatient)) {
+
+            System.out.println(
+                    "ERROR: Patient is not a valid "
+                    + "Inpatient object."
+            );
+
+            return;
+        }
+
+        clsInpatient inpatient =
+                (clsInpatient) patient;
+
         // Check if patient already has a bed
-        if (patient.getBedNumber() != null) {
+        if (inpatient.getBedNumber() != null) {
 
             System.out.println(
                     "Patient already has bed: "
-                    + patient.getBedNumber()
+                    + inpatient.getBedNumber()
             );
 
             return;
@@ -451,35 +685,52 @@ public class ST10474385PROG6112Assignment1 {
         // Display available beds
         displayAvailableBeds();
 
-        System.out.print("Enter bed number to allocate: ");
-        String bedNumber = scanner.nextLine().toUpperCase();
+        System.out.print(
+                "Enter bed number to allocate: "
+        );
+
+        String bedNumber =
+                scanner.nextLine().toUpperCase();
 
         if (!isValidBed(bedNumber)) {
 
-            System.out.println("Invalid bed number.");
+            System.out.println(
+                    "Invalid bed number."
+            );
+
             return;
         }
 
         if (isBedOccupied(bedNumber)) {
 
             System.out.println(
-                    "ERROR: " + bedNumber + " is already occupied."
+                    "ERROR: "
+                    + bedNumber
+                    + " is already occupied."
             );
 
             return;
         }
 
         // Occupy bed
-        setBedOccupant(bedNumber, patient.getPatientId());
+        setBedOccupant(
+                bedNumber,
+                patient.getPatientId()
+        );
 
-        // Store bed number in patient
-        patient.setBedNumber(bedNumber);
+        // Store bed number in Inpatient
+        inpatient.setBedNumber(
+                bedNumber
+        );
 
         System.out.println(
-                "Bed " + bedNumber
+                "Bed "
+                + bedNumber
                 + " allocated successfully to "
-                + patient.getFirstName() + " "
-                + patient.getLastName() + "."
+                + inpatient.getFirstName()
+                + " "
+                + inpatient.getLastName()
+                + "."
         );
     }
 
@@ -489,22 +740,34 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void releaseBed() {
 
-        System.out.println("\n--- Release Bed ---");
+        System.out.println(
+                "\n--- Release Bed ---"
+        );
 
-        System.out.print("Enter Patient ID: ");
-        String patientId = scanner.nextLine();
+        System.out.print(
+                "Enter Patient ID: "
+        );
 
-        clsPatient patient = findPatient(patientId);
+        String patientId =
+                scanner.nextLine();
+
+        clsPatient patient =
+                findPatient(patientId);
 
         if (patient == null) {
-            System.out.println("Patient not found.");
+
+            System.out.println(
+                    "Patient not found."
+            );
+
             return;
         }
 
-        if (patient.getBedNumber() == null) {
+        if (getPatientBed(patient) == null) {
 
             System.out.println(
-                    "This patient does not currently have a bed."
+                    "This patient does not "
+                    + "currently have a bed."
             );
 
             return;
@@ -517,27 +780,44 @@ public class ST10474385PROG6112Assignment1 {
     // RELEASE BED FROM PATIENT
     // ==========================================
 
-    public static void releaseBedFromPatient(clsPatient patient) {
+    public static void releaseBedFromPatient(
+            clsPatient patient) {
 
-        String bedNumber = patient.getBedNumber();
+        if (!(patient instanceof clsInpatient)) {
+
+            return;
+        }
+
+        clsInpatient inpatient =
+                (clsInpatient) patient;
+
+        String bedNumber =
+                inpatient.getBedNumber();
 
         if (bedNumber == null) {
+
             return;
         }
 
         // Find bed and make it available
-        for (int row = 0; row < beds.length; row++) {
+        for (int row = 0;
+                row < beds.length;
+                row++) {
 
-            for (int col = 0; col < beds[row].length; col++) {
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
-                if (beds[row][col].equalsIgnoreCase(bedNumber)) {
+                if (beds[row][col]
+                        .equalsIgnoreCase(bedNumber)) {
 
                     bedOccupants[row][col] = null;
 
-                    patient.setBedNumber(null);
+                    inpatient.setBedNumber(null);
 
                     System.out.println(
-                            "Bed " + bedNumber
+                            "Bed "
+                            + bedNumber
                             + " has been released."
                     );
 
@@ -553,7 +833,9 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void displayWardLayout() {
 
-        System.out.println("\n--- COMPLETE WARD LAYOUT ---");
+        System.out.println(
+                "\n--- COMPLETE WARD LAYOUT ---"
+        );
 
         System.out.println(
                 "Available = [Available]"
@@ -565,24 +847,31 @@ public class ST10474385PROG6112Assignment1 {
 
         System.out.println();
 
-        for (int row = 0; row < beds.length; row++) {
+        for (int row = 0;
+                row < beds.length;
+                row++) {
 
-            for (int col = 0; col < beds[row].length; col++) {
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
-                String bedNumber = beds[row][col];
+                String bedNumber =
+                        beds[row][col];
 
                 if (bedOccupants[row][col] == null) {
 
                     System.out.printf(
                             "%-18s",
-                            bedNumber + " [Available]"
+                            bedNumber
+                            + " [Available]"
                     );
 
                 } else {
 
                     System.out.printf(
                             "%-18s",
-                            bedNumber + " [Occupied]"
+                            bedNumber
+                            + " [Occupied]"
                     );
                 }
             }
@@ -591,13 +880,17 @@ public class ST10474385PROG6112Assignment1 {
         }
 
         System.out.println(
-                "\nAvailable Beds: " + getAvailableBedCount()
-                + " / " + TOTAL_BEDS
+                "\nAvailable Beds: "
+                + getAvailableBedCount()
+                + " / "
+                + TOTAL_BEDS
         );
 
         System.out.println(
-                "Occupied Beds: " + getOccupiedBedCount()
-                + " / " + TOTAL_BEDS
+                "Occupied Beds: "
+                + getOccupiedBedCount()
+                + " / "
+                + TOTAL_BEDS
         );
     }
 
@@ -607,23 +900,31 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void displayAvailableBeds() {
 
-        System.out.println("\n--- AVAILABLE BEDS ---");
+        System.out.println(
+                "\n--- AVAILABLE BEDS ---"
+        );
 
         int available = 0;
 
-        for (int row = 0; row < beds.length; row++) {
+        for (int row = 0;
+                row < beds.length;
+                row++) {
 
-            for (int col = 0; col < beds[row].length; col++) {
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
                 if (bedOccupants[row][col] == null) {
 
                     System.out.print(
-                            beds[row][col] + "  "
+                            beds[row][col]
+                            + "  "
                     );
 
                     available++;
 
                     if (available % 5 == 0) {
+
                         System.out.println();
                     }
                 }
@@ -631,10 +932,16 @@ public class ST10474385PROG6112Assignment1 {
         }
 
         if (available == 0) {
-            System.out.println("No beds are currently available.");
-        } else {
+
             System.out.println(
-                    "\nTotal Available Beds: " + available
+                    "No beds are currently available."
+            );
+
+        } else {
+
+            System.out.println(
+                    "\nTotal Available Beds: "
+                    + available
             );
         }
     }
@@ -645,19 +952,27 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void displayOccupiedBeds() {
 
-        System.out.println("\n--- OCCUPIED BEDS ---");
+        System.out.println(
+                "\n--- OCCUPIED BEDS ---"
+        );
 
         int occupied = 0;
 
-        for (int row = 0; row < beds.length; row++) {
+        for (int row = 0;
+                row < beds.length;
+                row++) {
 
-            for (int col = 0; col < beds[row].length; col++) {
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
                 if (bedOccupants[row][col] != null) {
 
-                    String patientId = bedOccupants[row][col];
+                    String patientId =
+                            bedOccupants[row][col];
 
-                    clsPatient patient = findPatient(patientId);
+                    clsPatient patient =
+                            findPatient(patientId);
 
                     System.out.print(
                             beds[row][col]
@@ -666,6 +981,7 @@ public class ST10474385PROG6112Assignment1 {
                     );
 
                     if (patient != null) {
+
                         System.out.print(
                                 " | Name: "
                                 + patient.getFirstName()
@@ -682,10 +998,16 @@ public class ST10474385PROG6112Assignment1 {
         }
 
         if (occupied == 0) {
-            System.out.println("No beds are currently occupied.");
-        } else {
+
             System.out.println(
-                    "\nTotal Occupied Beds: " + occupied
+                    "No beds are currently occupied."
+            );
+
+        } else {
+
+            System.out.println(
+                    "\nTotal Occupied Beds: "
+                    + occupied
             );
         }
     }
@@ -700,20 +1022,56 @@ public class ST10474385PROG6112Assignment1 {
 
         do {
 
-            System.out.println("\n=================================");
-            System.out.println("REPORTS");
-            System.out.println("=================================");
-            System.out.println("1. Display All Registered Patients");
-            System.out.println("2. Display All Available Beds");
-            System.out.println("3. Display All Occupied Beds");
-            System.out.println("4. Display Total Registered Patients");
-            System.out.println("5. Display Total Occupied Beds");
-            System.out.println("6. Display Ward Occupancy Percentage");
-            System.out.println("7. Display All Reports");
-            System.out.println("8. Return to Main Menu");
-            System.out.println("=================================");
+            System.out.println(
+                    "\n================================="
+            );
 
-            choice = readInt("Enter your choice: ");
+            System.out.println(
+                    "REPORTS"
+            );
+
+            System.out.println(
+                    "================================="
+            );
+
+            System.out.println(
+                    "1. Display All Registered Patients"
+            );
+
+            System.out.println(
+                    "2. Display All Available Beds"
+            );
+
+            System.out.println(
+                    "3. Display All Occupied Beds"
+            );
+
+            System.out.println(
+                    "4. Display Total Registered Patients"
+            );
+
+            System.out.println(
+                    "5. Display Total Occupied Beds"
+            );
+
+            System.out.println(
+                    "6. Display Ward Occupancy Percentage"
+            );
+
+            System.out.println(
+                    "7. Display All Reports"
+            );
+
+            System.out.println(
+                    "8. Return to Main Menu"
+            );
+
+            System.out.println(
+                    "================================="
+            );
+
+            choice =
+                    readInt("Enter your choice: ");
 
             switch (choice) {
 
@@ -746,7 +1104,9 @@ public class ST10474385PROG6112Assignment1 {
                     break;
 
                 case 8:
-                    System.out.println("Returning to main menu...");
+                    System.out.println(
+                            "Returning to main menu..."
+                    );
                     break;
 
                 default:
@@ -764,7 +1124,9 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void displayTotalRegisteredPatients() {
 
-        System.out.println("\n--- TOTAL REGISTERED PATIENTS ---");
+        System.out.println(
+                "\n--- TOTAL REGISTERED PATIENTS ---"
+        );
 
         System.out.println(
                 "Total number of registered patients: "
@@ -778,7 +1140,9 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void displayTotalOccupiedBeds() {
 
-        System.out.println("\n--- TOTAL OCCUPIED BEDS ---");
+        System.out.println(
+                "\n--- TOTAL OCCUPIED BEDS ---"
+        );
 
         System.out.println(
                 "Total number of occupied beds: "
@@ -792,12 +1156,16 @@ public class ST10474385PROG6112Assignment1 {
 
     public static void displayOccupancyPercentage() {
 
-        System.out.println("\n--- WARD OCCUPANCY ---");
+        System.out.println(
+                "\n--- WARD OCCUPANCY ---"
+        );
 
-        int occupiedBeds = getOccupiedBedCount();
+        int occupiedBeds =
+                getOccupiedBedCount();
 
         double occupancyPercentage =
-                ((double) occupiedBeds / TOTAL_BEDS) * 100;
+                ((double) occupiedBeds
+                / TOTAL_BEDS) * 100;
 
         System.out.printf(
                 "Ward Occupancy: %.2f%%%n",
@@ -826,19 +1194,38 @@ public class ST10474385PROG6112Assignment1 {
     public static void displayAllReports() {
 
         System.out.println("\n");
-        System.out.println("========================================");
-        System.out.println("         HOSPITAL SYSTEM REPORTS");
-        System.out.println("========================================");
 
-        // Report 1
-        System.out.println("\n1. REGISTERED PATIENTS");
+        System.out.println(
+                "========================================"
+        );
+
+        System.out.println(
+                "         HOSPITAL SYSTEM REPORTS"
+        );
+
+        System.out.println(
+                "========================================"
+        );
+
+        // ==========================================
+        // REPORT 1
+        // ==========================================
+
+        System.out.println(
+                "\n1. REGISTERED PATIENTS"
+        );
+
         System.out.println(
                 "Total Registered Patients: "
                 + patients.size()
         );
 
         if (patients.isEmpty()) {
-            System.out.println("No patients registered.");
+
+            System.out.println(
+                    "No patients registered."
+            );
+
         } else {
 
             for (clsPatient patient : patients) {
@@ -853,49 +1240,87 @@ public class ST10474385PROG6112Assignment1 {
                         + patient.getPatientCategory()
                 );
 
-                if (patient.getBedNumber() != null) {
+                if (getPatientBed(patient) != null) {
+
                     System.out.println(
                             "   Bed: "
-                            + patient.getBedNumber()
+                            + getPatientBed(patient)
+                    );
+                }
+
+                // Display ward for Inpatients
+                if (patient instanceof clsInpatient) {
+
+                    clsInpatient inpatient =
+                            (clsInpatient) patient;
+
+                    System.out.println(
+                            "   Ward: "
+                            + inpatient.getWardNumber()
                     );
                 }
             }
         }
 
-        // Report 2
-        System.out.println("\n2. AVAILABLE BEDS");
-
-        int available = getAvailableBedCount();
+        // ==========================================
+        // REPORT 2
+        // ==========================================
 
         System.out.println(
-                "Total Available Beds: " + available
+                "\n2. AVAILABLE BEDS"
         );
 
-        for (int row = 0; row < beds.length; row++) {
+        int available =
+                getAvailableBedCount();
 
-            for (int col = 0; col < beds[row].length; col++) {
+        System.out.println(
+                "Total Available Beds: "
+                + available
+        );
+
+        for (int row = 0;
+                row < beds.length;
+                row++) {
+
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
                 if (bedOccupants[row][col] == null) {
 
                     System.out.print(
-                            beds[row][col] + "  "
+                            beds[row][col]
+                            + "  "
                     );
                 }
             }
         }
 
-        // Report 3
-        System.out.println("\n\n3. OCCUPIED BEDS");
+        System.out.println();
 
-        int occupied = getOccupiedBedCount();
+        // ==========================================
+        // REPORT 3
+        // ==========================================
 
         System.out.println(
-                "Total Occupied Beds: " + occupied
+                "\n3. OCCUPIED BEDS"
         );
 
-        for (int row = 0; row < beds.length; row++) {
+        int occupied =
+                getOccupiedBedCount();
 
-            for (int col = 0; col < beds[row].length; col++) {
+        System.out.println(
+                "Total Occupied Beds: "
+                + occupied
+        );
+
+        for (int row = 0;
+                row < beds.length;
+                row++) {
+
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
                 if (bedOccupants[row][col] != null) {
 
@@ -908,25 +1333,41 @@ public class ST10474385PROG6112Assignment1 {
             }
         }
 
-        // Report 4
-        System.out.println("\n4. TOTAL REGISTERED PATIENTS");
+        // ==========================================
+        // REPORT 4
+        // ==========================================
+
+        System.out.println(
+                "\n4. TOTAL REGISTERED PATIENTS"
+        );
 
         System.out.println(
                 patients.size()
         );
 
-        // Report 5
-        System.out.println("\n5. TOTAL OCCUPIED BEDS");
+        // ==========================================
+        // REPORT 5
+        // ==========================================
+
+        System.out.println(
+                "\n5. TOTAL OCCUPIED BEDS"
+        );
 
         System.out.println(
                 occupied
         );
 
-        // Report 6
-        System.out.println("\n6. WARD OCCUPANCY PERCENTAGE");
+        // ==========================================
+        // REPORT 6
+        // ==========================================
+
+        System.out.println(
+                "\n6. WARD OCCUPANCY PERCENTAGE"
+        );
 
         double percentage =
-                ((double) occupied / TOTAL_BEDS) * 100;
+                ((double) occupied
+                / TOTAL_BEDS) * 100;
 
         System.out.printf(
                 "Occupancy: %.2f%%%n",
@@ -942,7 +1383,8 @@ public class ST10474385PROG6112Assignment1 {
     // FIND PATIENT BY ID
     // ==========================================
 
-    public static clsPatient findPatient(String patientId) {
+    public static clsPatient findPatient(
+            String patientId) {
 
         for (clsPatient patient : patients) {
 
@@ -960,47 +1402,86 @@ public class ST10474385PROG6112Assignment1 {
     // PATIENT CATEGORY
     // ==========================================
 
-    public static String getPatientCategory() {
+    public static PatientCategory getPatientCategory() {
 
         while (true) {
 
-            System.out.println("\nSelect Patient Category:");
-            System.out.println("1. Inpatient");
-            System.out.println("2. Outpatient");
-            System.out.println("3. Emergency");
+            System.out.println(
+                    "\nSelect Patient Category:"
+            );
 
-            int choice = readInt("Enter category: ");
+            System.out.println(
+                    "1. Inpatient"
+            );
+
+            System.out.println(
+                    "2. Outpatient"
+            );
+
+            System.out.println(
+                    "3. Emergency"
+            );
+
+            int choice =
+                    readInt("Enter category: ");
 
             switch (choice) {
 
                 case 1:
-                    return "Inpatient";
+                    return PatientCategory.INPATIENT;
 
                 case 2:
-                    return "Outpatient";
+                    return PatientCategory.OUTPATIENT;
 
                 case 3:
-                    return "Emergency";
+                    return PatientCategory.EMERGENCY;
 
                 default:
+
                     System.out.println(
-                            "Invalid category. Please try again."
+                            "Invalid category. "
+                            + "Please try again."
                     );
             }
         }
     }
 
     // ==========================================
+    // GET PATIENT BED
+    // ==========================================
+
+    public static String getPatientBed(
+            clsPatient patient) {
+
+        if (patient instanceof clsInpatient) {
+
+            clsInpatient inpatient =
+                    (clsInpatient) patient;
+
+            return inpatient.getBedNumber();
+        }
+
+        return null;
+    }
+
+    // ==========================================
     // CHECK IF BED NUMBER IS VALID
     // ==========================================
 
-    public static boolean isValidBed(String bedNumber) {
+    public static boolean isValidBed(
+            String bedNumber) {
 
-        for (int row = 0; row < beds.length; row++) {
+        for (int row = 0;
+                row < beds.length;
+                row++) {
 
-            for (int col = 0; col < beds[row].length; col++) {
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
-                if (beds[row][col].equalsIgnoreCase(bedNumber)) {
+                if (beds[row][col]
+                        .equalsIgnoreCase(bedNumber)) {
+
                     return true;
                 }
             }
@@ -1013,15 +1494,22 @@ public class ST10474385PROG6112Assignment1 {
     // CHECK IF BED IS OCCUPIED
     // ==========================================
 
-    public static boolean isBedOccupied(String bedNumber) {
+    public static boolean isBedOccupied(
+            String bedNumber) {
 
-        for (int row = 0; row < beds.length; row++) {
+        for (int row = 0;
+                row < beds.length;
+                row++) {
 
-            for (int col = 0; col < beds[row].length; col++) {
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
-                if (beds[row][col].equalsIgnoreCase(bedNumber)) {
+                if (beds[row][col]
+                        .equalsIgnoreCase(bedNumber)) {
 
-                    return bedOccupants[row][col] != null;
+                    return bedOccupants[row][col]
+                            != null;
                 }
             }
         }
@@ -1037,13 +1525,20 @@ public class ST10474385PROG6112Assignment1 {
             String bedNumber,
             String patientId) {
 
-        for (int row = 0; row < beds.length; row++) {
+        for (int row = 0;
+                row < beds.length;
+                row++) {
 
-            for (int col = 0; col < beds[row].length; col++) {
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
-                if (beds[row][col].equalsIgnoreCase(bedNumber)) {
+                if (beds[row][col]
+                        .equalsIgnoreCase(bedNumber)) {
 
-                    bedOccupants[row][col] = patientId;
+                    bedOccupants[row][col] =
+                            patientId;
+
                     return;
                 }
             }
@@ -1058,11 +1553,16 @@ public class ST10474385PROG6112Assignment1 {
 
         int count = 0;
 
-        for (int row = 0; row < beds.length; row++) {
+        for (int row = 0;
+                row < beds.length;
+                row++) {
 
-            for (int col = 0; col < beds[row].length; col++) {
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
                 if (bedOccupants[row][col] == null) {
+
                     count++;
                 }
             }
@@ -1079,11 +1579,16 @@ public class ST10474385PROG6112Assignment1 {
 
         int count = 0;
 
-        for (int row = 0; row < beds.length; row++) {
+        for (int row = 0;
+                row < beds.length;
+                row++) {
 
-            for (int col = 0; col < beds[row].length; col++) {
+            for (int col = 0;
+                    col < beds[row].length;
+                    col++) {
 
                 if (bedOccupants[row][col] != null) {
+
                     count++;
                 }
             }
@@ -1096,7 +1601,8 @@ public class ST10474385PROG6112Assignment1 {
     // READ INTEGER SAFELY
     // ==========================================
 
-    public static int readInt(String message) {
+    public static int readInt(
+            String message) {
 
         while (true) {
 
@@ -1116,5 +1622,6 @@ public class ST10474385PROG6112Assignment1 {
             }
         }
     }
+    
 }
 

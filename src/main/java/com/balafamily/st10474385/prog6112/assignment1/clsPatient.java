@@ -16,11 +16,7 @@ class clsPatient {
     private int age;
     private String gender;
     private String medicalCondition;
-    private String patientCategory;
-
-    // Bed allocated to this patient.
-    // null means no bed is currently allocated.
-    private String bedNumber;
+    private PatientCategory patientCategory;
 
     // ==========================================
     // CONSTRUCTOR
@@ -33,7 +29,7 @@ class clsPatient {
             int age,
             String gender,
             String medicalCondition,
-            String patientCategory) {
+            PatientCategory patientCategory) {
 
         this.patientId = patientId;
         this.firstName = firstName;
@@ -42,8 +38,6 @@ class clsPatient {
         this.gender = gender;
         this.medicalCondition = medicalCondition;
         this.patientCategory = patientCategory;
-
-        this.bedNumber = null;
     }
 
     // ==========================================
@@ -74,12 +68,8 @@ class clsPatient {
         return medicalCondition;
     }
 
-    public String getPatientCategory() {
+    public PatientCategory getPatientCategory() {
         return patientCategory;
-    }
-
-    public String getBedNumber() {
-        return bedNumber;
     }
 
     // ==========================================
@@ -106,12 +96,8 @@ class clsPatient {
         this.medicalCondition = medicalCondition;
     }
 
-    public void setPatientCategory(String patientCategory) {
+    public void setPatientCategory(PatientCategory patientCategory) {
         this.patientCategory = patientCategory;
-    }
-
-    public void setBedNumber(String bedNumber) {
-        this.bedNumber = bedNumber;
     }
 
     // ==========================================
@@ -122,46 +108,19 @@ class clsPatient {
 
         System.out.println("-----------------------------------");
 
-        System.out.println(
-                "Patient ID: " + patientId
-        );
+        System.out.println("Patient ID: " + patientId);
 
-        System.out.println(
-                "First Name: " + firstName
-        );
+        System.out.println("First Name: " + firstName);
 
-        System.out.println(
-                "Last Name: " + lastName
-        );
+        System.out.println("Last Name: " + lastName);
 
-        System.out.println(
-                "Age: " + age
-        );
+        System.out.println("Age: " + age);
 
-        System.out.println(
-                "Gender: " + gender
-        );
+        System.out.println("Gender: " + gender);
 
-        System.out.println(
-                "Medical Condition: " + medicalCondition
-        );
+        System.out.println("Medical Condition: " + medicalCondition);
 
-        System.out.println(
-                "Patient Category: " + patientCategory
-        );
-
-        if (bedNumber != null) {
-
-            System.out.println(
-                    "Allocated Bed: " + bedNumber
-            );
-
-        } else {
-
-            System.out.println(
-                    "Allocated Bed: None"
-            );
-        }
+        System.out.println("Patient Category: " + patientCategory);
 
         System.out.println("-----------------------------------");
     }
